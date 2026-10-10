@@ -1,0 +1,234 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>메타 지우개</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: single column workbench — drop zone, then a list of files with before/after status, sticky action bar */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#18212b; --muted:#5d6b78; --line:#dbe1e7;
+  --accent:#1f5fd1; --accent-ink:#ffffff; --warn:#b4530b; --warn-bg:#fdf0e4; --ok:#1d7a4a; --ok-bg:#e5f4ec;
+  --font-body:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161c; --surface:#19212a; --ink:#e6ebf0; --muted:#94a3b2; --line:#2b3642;
+  --accent:#6b9cff; --accent-ink:#0c1422; --warn:#f0a35e; --warn-bg:#3a2717; --ok:#5fcf93; --ok-bg:#16301f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161c; --surface:#19212a; --ink:#e6ebf0; --muted:#94a3b2; --line:#2b3642;
+  --accent:#6b9cff; --accent-ink:#0c1422; --warn:#f0a35e; --warn-bg:#3a2717; --ok:#5fcf93; --ok-bg:#16301f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.6}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:32px 120px;display:grid;gap:20px}
+header{display:grid;gap:4px}
+h1{font-size:1.6rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.lede{margin:0;color:var(--muted);max-width:60ch}
+.drop{border:2px dashed var(--line);border-radius:14px;background:var(--surface);padding:32px 20px;display:grid;gap:10px;justify-items:center;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.drop:hover,.drop.over{border-color:var(--accent)}
+.drop:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.drop strong{font-size:1.05rem}
+.drop span{color:var(--muted);font-size:.9rem}
+.strip{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:4px}
+.tag{font-family:var(--font-mono);font-size:.75rem;padding:2px 8px;border-radius:999px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.opts{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;font-size:.9rem;color:var(--muted)}
+.opts label{display:flex;gap:6px;align-items:center}
+.opts input[type=text]{font:inherit;font-family:var(--font-mono);padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);width:9em}
+ul.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.item{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px 8px 8px}
+.item img{width:56px;height:56px;object-fit:cover;border-radius:6px;background:var(--bg);display:block}
+.meta{min-width:0;display:grid;gap:2px}
+.name{font-family:var(--font-mono);font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.orig{font-size:.78rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.chip{font-size:.72rem;padding:1px 7px;border-radius:999px;background:var(--warn-bg);color:var(--warn);font-weight:500}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.state{font-size:.8rem;color:var(--muted);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.state.done{color:var(--ok);font-weight:500}
+.state.err{color:var(--warn)}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+.bar-in{max-width:760px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.count{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+.btns{display:flex;gap:8px}
+button{font:inherit;font-weight:500;border-radius:8px;padding:9px 16px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.note{font-size:.85rem;color:var(--muted);margin:0}
+.empty{color:var(--muted);font-size:.9rem;text-align:center;padding:8px}
+@media (max-width:480px){.item{grid-template-columns:48px 1fr}.item img{width:48px;height:48px}.state{grid-column:2;text-align:left}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>메타 지우개</h1>
+    <p class="lede">사진 속 촬영 위치, 기기 정보, 촬영 시각 같은 숨은 정보를 지우고 새 이름으로 저장합니다. 사진은 이 브라우저 안에서만 처리되고 어디에도 올라가지 않아요.</p>
+  </header>
+
+  <div class="drop" id="drop" tabindex="0" role="button" aria-label="이미지 선택">
+    <strong>사진을 여기에 끌어다 놓거나 눌러서 고르세요</strong>
+    <span>여러 장을 한 번에 넣을 수 있어요 · JPG, PNG, WebP, GIF</span>
+    <div class="strip"><span class="tag">GPS 위치</span><span class="tag">카메라·폰 모델</span><span class="tag">촬영 일시</span><span class="tag">EXIF / XMP / IPTC</span><span class="tag">ICC·텍스트 청크</span></div>
+    <input type="file" id="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden>
+  </div>
+
+  <div class="opts">
+    <label for="prefix">파일 이름 앞부분 <input type="text" id="prefix" value="photo" maxlength="30"></label>
+    <span>예: <span id="example" style="font-family:var(--font-mono)"></span></span>
+  </div>
+
+  <ul class="list" id="list"></ul>
+  <p class="empty" id="empty">아직 넣은 사진이 없어요.</p>
+  <p class="note" id="capnote" hidden></p>
+</div>
+
+<div class="bar">
+  <div class="bar-in">
+    <span class="count" id="count">0장</span>
+    <div class="btns">
+      <button id="clear" disabled>비우기</button>
+      <button id="saveAll" class="primary" disabled>모두 저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const drop=$('#drop'), input=$('#file'), list=$('#list');
+let items=[]; let busy=false; let downloads; let mode='pending';
+const stamp=(()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;})();
+
+function prefix(){return ($('#prefix').value.trim().replace(/[^\w가-힣-]+/g,'_')||'photo');}
+function nameFor(i,ext){return `${prefix()}_${stamp}_${String(i+1).padStart(2,'0')}.${ext}`;}
+function updateExample(){$('#example').textContent=nameFor(0,'jpg');items.forEach((it,i)=>{it.out=nameFor(i,it.ext);it.el.querySelector('.name').textContent=it.out;});}
+$('#prefix').addEventListener('input',updateExample);
+
+// Detect what metadata the original carries (best-effort byte scan)
+function detect(buf,type){
+  const b=new Uint8Array(buf), found=new Set();
+  const has=(str,from=0,to=b.length)=>{const c=[...str].map(x=>x.charCodeAt(0));outer:for(let i=from;i<Math.min(to,b.length)-c.length;i++){for(let j=0;j<c.length;j++)if(b[i+j]!==c[j])continue outer;return i;}return -1;};
+  if(type==='image/jpeg'){
+    let i=2;
+    while(i<b.length-4&&b[i]===0xFF){
+      const m=b[i+1],len=(b[i+2]<<8)|b[i+3];
+      if(m===0xDA)break;
+      if(m===0xE1){
+        if(has('Exif',i+4,i+10)>=0){found.add('EXIF');
+          const seg=b.subarray(i+10,i+2+len),le=seg[0]===0x49;
+          for(let k=0;k<seg.length-1;k++){if((le&&seg[k]===0x25&&seg[k+1]===0x88)||(!le&&seg[k]===0x88&&seg[k+1]===0x25)){found.add('GPS 위치');break;}}
+          if(has('Apple',i,i+len)>=0||has('samsung',i,i+len)>=0||has('Canon',i,i+len)>=0||has('NIKON',i,i+len)>=0||has('SONY',i,i+len)>=0)found.add('기기 정보');
+        } else if(has('http://ns.adobe.com/xap',i,i+40)>=0)found.add('XMP');
+      }
+      if(m===0xED)found.add('IPTC');
+      if(m===0xE2)found.add('ICC');
+      i+=2+len;
+    }
+  } else if(type==='image/png'){
+    ['eXIf','tEXt','iTXt','zTXt','iCCP','tIME'].forEach(c=>{if(has(c)>=0)found.add(c==='eXIf'?'EXIF':c==='iCCP'?'ICC':c==='tIME'?'시각':'텍스트');});
+  } else {
+    if(has('EXIF')>=0||has('Exif')>=0)found.add('EXIF');
+    if(has('XMP')>=0)found.add('XMP');
+  }
+  return [...found];
+}
+
+async function clean(file){
+  let bmp;
+  try{bmp=await createImageBitmap(file,{imageOrientation:'from-image'});}catch{bmp=await createImageBitmap(file);}
+  const c=document.createElement('canvas');c.width=bmp.width;c.height=bmp.height;
+  const ctx=c.getContext('2d');
+  const outType=file.type==='image/jpeg'?'image/jpeg':file.type==='image/webp'?'image/webp':'image/png';
+  if(outType==='image/jpeg'){ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);}
+  ctx.drawImage(bmp,0,0);bmp.close?.();
+  const blob=await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('변환 실패')),outType,0.95));
+  return {blob,ext:outType==='image/jpeg'?'jpg':outType==='image/webp'?'webp':'png'};
+}
+
+function fmt(n){return n<1024*1024?`${Math.round(n/1024)} KB`:`${(n/1024/1024).toFixed(1)} MB`;}
+
+async function add(files){
+  const imgs=[...files].filter(f=>/^image\/(jpeg|png|webp|gif)$/.test(f.type));
+  const skipped=files.length-imgs.length;
+  $('#empty').hidden=true;
+  for(const f of imgs){
+    const li=document.createElement('li');li.className='item';
+    li.innerHTML='<img alt=""><div class="meta"><div class="name">처리 중…</div><div class="orig"></div><div class="chips"></div></div><div class="state">지우는 중</div>';
+    li.querySelector('.orig').textContent=`원본: ${f.name} · ${fmt(f.size)}`;
+    list.appendChild(li);
+    const it={el:li,file:f,status:'working'};items.push(it);
+    try{
+      const found=detect(await f.arrayBuffer(),f.type);
+      const {blob,ext}=await clean(f);
+      it.blob=blob;it.ext=ext;it.status='ready';
+      li.querySelector('img').src=URL.createObjectURL(blob);
+      const chips=li.querySelector('.chips');
+      if(found.length){found.forEach(t=>{const s=document.createElement('span');s.className='chip';s.textContent=t+' 삭제';chips.appendChild(s);});}
+      else{const s=document.createElement('span');s.className='chip ok';s.textContent='숨은 정보 없음 · 새로 저장';chips.appendChild(s);}
+      setState(it,'준비됨 · '+fmt(blob.size));
+    }catch(e){it.status='error';setState(it,'열 수 없는 파일','err');}
+    updateExample();refresh();
+  }
+  if(skipped>0){$('#capnote').hidden=false;$('#capnote').textContent=`이미지가 아니거나 지원하지 않는 형식(HEIC 등) ${skipped}개는 건너뛰었어요.`;}
+  refresh();
+}
+function setState(it,t,cls){const s=it.el.querySelector('.state');s.textContent=t;s.className='state'+(cls?' '+cls:'');}
+function refresh(){
+  const ready=items.filter(i=>i.status==='ready').length, done=items.filter(i=>i.status==='saved').length;
+  $('#count').textContent=`${items.length}장${done?` · 저장 ${done}`:''}`;
+  $('#saveAll').disabled=busy||!ready||mode==='none';
+  $('#clear').disabled=busy||!items.length;
+  $('#empty').hidden=items.length>0;
+}
+
+async function saveOne(it){
+  if(mode==='native'){
+    for(let tries=0;tries<3;tries++){
+      try{await downloads.save({filename:it.out,data:it.blob});return 'saved';}
+      catch(e){
+        if(e?.code==='rate_limited'){await new Promise(r=>setTimeout(r,900));continue;}
+        if(e?.code==='declined')return 'declined';
+        throw e;
+      }
+    }
+    return 'declined';
+  } else {
+    const a=document.createElement('a');a.href=URL.createObjectURL(it.blob);a.download=it.out;document.body.appendChild(a);a.click();a.remove();
+    await new Promise(r=>setTimeout(r,350));return 'saved';
+  }
+}
+
+$('#saveAll').addEventListener('click',async()=>{
+  busy=true;refresh();
+  for(const it of items.filter(i=>i.status==='ready')){
+    setState(it,'저장 중…');
+    try{
+      const r=await saveOne(it);
+      if(r==='saved'){it.status='saved';setState(it,'저장됨','done');}
+      else setState(it,'건너뜀','err');
+    }catch(e){
+      setState(it,'저장 못 함','err');
+      if(['unavailable','not_granted','capability_disabled','capability_removed'].includes(e?.code)){mode='none';showCapNote();break;}
+    }
+    refresh();
+  }
+  busy=false;refresh();
+});
+
+$('#clear').addEventListener('click',()=>{items.forEach(i=>{const im=i.el.querySelector('img');if(im.src)URL.revokeObjectURL(im.src);});items=[];list.innerHTML='';$('#capnote').hidden=true;refresh();});
+
+drop.addEventListener('click',()=>input.click());
+drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();input.click();}});
+input.addEventListener('change',()=>{add(input.files);input.value='';});
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+drop.addEventListener('drop',e=>add(e.dataTransfer.files));
+document.addEventListener('paste',e=>{const f=[...(e.clipboardData?.files||[])];if(f.length)add(f);});
+
+function showCapNote(){$('#capnote').hidden=false;$('#capnote').textContent='이 화면에서는 파일 저장을 쓸 수 없어요. 아티팩트를 claude.ai에서 직접 열어 주세요.';}
+
+updateExample();refresh();
+if(window.claude?.use){
+  window.claude.use('downloads').then(d=>{downloads=d;mode=d?'native':'none';if(!d)showCapNote();refresh();}).catch(()=>{mode='none';showCapNote();refresh();});
+} else { mode='anchor'; refresh(); }
+</script>
+
+</body></html>
